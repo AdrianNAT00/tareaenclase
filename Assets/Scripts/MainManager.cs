@@ -1,39 +1,55 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using System.IO;
-using UnityEditor;
+using UnityEngine;
 
 public class MainManager : MonoBehaviour
 {
+
     public static MainManager instance { get; private set; }
     public Color teamColor;
 
-    public void Awake()
+    [System.Serializable]
+
+    class SaveData
     {
-        if (instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
+        public Color teamColor;
+    }
+
+    private void Awake()
+    {
+        if (instance != null)
         {
             Destroy(gameObject);
+            return;
         }
+
+        instance = this;
+        DontDestroyOnLoad(gameObject);
+
+        LoadColor();
     }
 
     public void SaveColor()
     {
-        string json = JsonUtility.ToJson(instance.teamColor);
+        SaveData data = new SaveData();
+        data.teamColor = teamColor;
+
+        string json = JsonUtility.ToJson(data);
+
         System.IO.File.WriteAllText(Application.persistentDataPath + "/savefile.json", json);
     }
+
     public void LoadColor()
     {
         string path = Application.persistentDataPath + "/savefile.json";
-        if(System.IO.File.Exists(path))
+
+        if (File.Exists(path))
         {
-            string json = File.ReadAllText(path);
-            instance.teamColor = JsonUtility.FromJson<Color>(json);
+            string json = System.IO.File.ReadAllText(path);
+            SaveData data = JsonUtility.FromJson<SaveData>(json);
+
+            teamColor = data.teamColor;
         }
     }
 }
